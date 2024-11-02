@@ -8,21 +8,21 @@ import java.util.Random;
 
 
 public class Product {
+
+    StringBuilder sb = new StringBuilder();
     private final Random random = new Random();
     private String productName;
     private final double productPrice;
-    private double vatAmount;
+    private double vatValue;
     private double vatPrice;
-    private double discountAmount;
+    private double discountValue;
     private double discountPrice;
+    private double finalPrice;
 
     public Product(String productName) {
         this.productName = productName;
         this.productPrice = getRandomPrice();
-        this.vatAmount = 0.0;
-        this.vatPrice = 0.0;
-        this.discountAmount = 0.0;
-        this.discountPrice = 0.0;
+        this.finalPrice = getProductPrice();
     }
 
     private int getRandomPrice() {
@@ -34,20 +34,17 @@ public class Product {
         return productName;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
     public double getProductPrice() {
         return productPrice;
     }
 
-    public double getVatAmount() {
-        return vatAmount;
+    public double getVatValue() {
+        return vatValue;
     }
 
-    public void setVatAmount(double vatAmount) {
-        this.vatAmount = vatAmount;
+    public void setVatValue(double vatValue) {
+        this.vatValue = vatValue;
+        this.setVatPrice(getFinalPrice() * getVatValue());
     }
 
     public double getVatPrice() {
@@ -56,14 +53,16 @@ public class Product {
 
     public void setVatPrice(double vatPrice) {
         this.vatPrice = vatPrice;
+        this.setFinalPrice(getFinalPrice() + getVatPrice());
     }
 
-    public double getDiscountAmount() {
-        return discountAmount;
+    public double getDiscountValue() {
+        return discountValue;
     }
 
-    public void setDiscountAmount(double discountAmount) {
-        this.discountAmount = discountAmount;
+    public void setDiscountValue(double discountValue) {
+        this.discountValue = discountValue;
+        this.setDiscountPrice(getProductPrice() - getDiscountValue());
     }
 
     public double getDiscountPrice() {
@@ -72,18 +71,32 @@ public class Product {
 
     public void setDiscountPrice(double discountPrice) {
         this.discountPrice = discountPrice;
+        this.setFinalPrice(this.getProductPrice() - this.getDiscountPrice());
+    }
+
+    public double getFinalPrice() {
+        return finalPrice;
+    }
+
+    public void setFinalPrice(double finalPrice) {
+        this.finalPrice = finalPrice;
     }
 
     @Override
     public String toString() {
-        return "Product{" +
-                "random=" + random +
-                ", productName='" + productName + '\'' +
-                ", productPrice=" + productPrice +
-                ", vatAmount=" + vatAmount +
-                ", vatPrice=" + vatPrice +
-                ", discountAmount=" + discountAmount +
-                ", discountPrice=" + discountPrice +
-                '}';
+        sb.append("Product{" +
+                "productName='" + getProductName() + "'" +
+                ", productPrice=" + getProductPrice());
+        if (vatValue != 0.0) {
+            sb.append(", vatValue=" + getVatValue() +
+                    ", vatPrice=" + getVatPrice());
+        }
+        if (discountValue != 0.0) {
+            sb.append(
+                    ", discountValue=" + getDiscountValue() +
+                            ", discountPrice=" + getDiscountPrice());
+        }
+        sb.append(", finalPrice=" + getFinalPrice());
+        return sb + "}";
     }
 }

@@ -14,7 +14,7 @@ public class GenerateProducts {
 
     List<Product> productList = new ArrayList<>();
 
-    public GenerateProducts(List<Product> productList) {
+    public GenerateProducts() {
         productList.add(new Product("Banan"));
         productList.add(new Product("Jabłko"));
         productList.add(new Product("Mleko"));
@@ -26,10 +26,4 @@ public class GenerateProducts {
         return productList;
     }
 
-    @Override
-    public String toString() {
-        return "GenerateProducts{" +
-                "productList=" + productList +
-                '}';
-    }
 }
