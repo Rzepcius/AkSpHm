@@ -1,7 +1,6 @@
 package com.example.aksphw.product.controler;
 
 import com.example.aksphw.product.GenerateProducts;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 

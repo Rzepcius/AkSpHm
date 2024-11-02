@@ -9,6 +9,7 @@ import java.util.Random;
 
 public class Product {
 
+    public static final String FORMAT = "%,.2f";
     StringBuilder sb = new StringBuilder();
     private final Random random = new Random();
     private String productName;
@@ -86,17 +87,17 @@ public class Product {
     public String toString() {
         sb.append("Product{" +
                 "productName='" + getProductName() + "'" +
-                ", productPrice=" + getProductPrice());
+                ", productPrice=" + String.format(FORMAT,getProductPrice()));
         if (vatValue != 0.0) {
-            sb.append(", vatValue=" + getVatValue() +
-                    ", vatPrice=" + getVatPrice());
+            sb.append(", vatValue=" + String.format(FORMAT,getVatValue()) +
+                    ", vatPrice=" + String.format(FORMAT,getVatPrice()));
         }
         if (discountValue != 0.0) {
             sb.append(
-                    ", discountValue=" + getDiscountValue() +
-                            ", discountPrice=" + getDiscountPrice());
+                    ", discountValue=" + String.format(FORMAT,getDiscountValue()) +
+                            ", discountPrice=" + String.format(FORMAT,getDiscountPrice()));
         }
-        sb.append(", finalPrice=" + getFinalPrice());
+        sb.append(", finalPrice=" + String.format(FORMAT,getFinalPrice()));
         return sb + "}";
     }
 }
