@@ -4,11 +4,13 @@ import com.example.aksphw.product.Product;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Profile({"Plus","Pro"})
 public class CalculateVat implements Calculate {
 
     @Value("${shop.vat.type:N/A}")
