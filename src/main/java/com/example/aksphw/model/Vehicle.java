@@ -2,8 +2,9 @@ package com.example.aksphw.model;
 
 import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.*;
+import org.springframework.hateoas.RepresentationModel;
 
-public class Vehicle {
+public class Vehicle extends RepresentationModel<Vehicle> {
 
     @Nonnull
     @Min(0)
@@ -16,9 +17,9 @@ public class Vehicle {
     @Size(min = 3)
     private String model;
     @NotNull
-    private Color color;
+    private String color;
 
-    public Vehicle(int id, @Nonnull String mark, @Nonnull String model,Color color) {
+    public Vehicle(int id, @Nonnull String mark, @Nonnull String model,String color) {
         this.id = id;
         this.mark = mark;
         this.model = model;
@@ -49,11 +50,11 @@ public class Vehicle {
         this.model = model;
     }
 
-    public Color getColor() {
+    public String getColor() {
         return color;
     }
 
-    public void setColor(Color color) {
+    public void setColor(String color) {
         this.color = color;
     }
 }
