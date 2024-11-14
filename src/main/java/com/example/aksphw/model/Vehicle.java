@@ -1,10 +1,7 @@
 package com.example.aksphw.model;
 
-import jakarta.annotation.Generated;
 import jakarta.annotation.Nonnull;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public class Vehicle {
 
@@ -18,7 +15,15 @@ public class Vehicle {
     @Nonnull
     @Size(min = 3)
     private String model;
-    private Color Color;
+    @NotNull
+    private Color color;
+
+    public Vehicle(int id, @Nonnull String mark, @Nonnull String model,Color color) {
+        this.id = id;
+        this.mark = mark;
+        this.model = model;
+        this.color = color;
+    }
 
     public int getId() {
         return id;
@@ -44,11 +49,11 @@ public class Vehicle {
         this.model = model;
     }
 
-    public com.example.aksphw.model.Color getColor() {
-        return Color;
+    public Color getColor() {
+        return color;
     }
 
-    public void setColor(com.example.aksphw.model.Color color) {
-        Color = color;
+    public void setColor(Color color) {
+        this.color = color;
     }
 }
