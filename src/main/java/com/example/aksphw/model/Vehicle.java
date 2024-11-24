@@ -4,12 +4,14 @@ import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.*;
 import org.springframework.hateoas.RepresentationModel;
 
+import java.util.Objects;
+
 public class Vehicle extends RepresentationModel<Vehicle> {
 
     @Nonnull
     @Min(0)
     @Max(Integer.MAX_VALUE)
-    private int id;
+    private Integer id;
     @Nonnull
     @Size(min = 3)
     private String mark;
@@ -56,5 +58,19 @@ public class Vehicle extends RepresentationModel<Vehicle> {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Vehicle vehicle = (Vehicle) o;
+        return id == vehicle.id && Objects.equals(mark, vehicle.mark) && Objects.equals(model, vehicle.model) && Objects.equals(color, vehicle.color);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, mark, model, color);
     }
 }
