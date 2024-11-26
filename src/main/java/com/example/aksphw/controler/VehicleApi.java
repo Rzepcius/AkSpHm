@@ -85,6 +85,9 @@ public class VehicleApi {
     public ResponseEntity<String> addVehicle(@RequestBody Vehicle newVehicle) {
         Optional<Vehicle> foundVehicle = vehicleService.getAllVehicles().stream().
                 filter(vehicle -> vehicle.equals(newVehicle)).findFirst();
+        if (vehicleService.getAllVehicles().stream().anyMatch(vehicle -> vehicle.getId() == newVehicle.getId())) {
+            return new ResponseEntity<>("Id already Used", HttpStatus.NOT_ACCEPTABLE);
+        }
         if (foundVehicle.isEmpty()) {
             vehicleService.getAllVehicles().add(newVehicle);
             return new ResponseEntity<>(HttpStatus.CREATED);
@@ -94,18 +97,19 @@ public class VehicleApi {
 
     }
 
-    @PutMapping
-    public ResponseEntity<String> modVehicle(@RequestBody Vehicle newVehicle) {
+    @PutMapping("/mod/{id}")
+    public ResponseEntity<String> modVehicle(@PathVariable int id,@RequestBody Vehicle modVehicle) {
         Optional<Vehicle> foundVehicle = vehicleService.getAllVehicles().stream().
-                filter(vehicle -> vehicle.getId() == newVehicle.getId()).findFirst();
+                filter(vehicle -> vehicle.getId() == modVehicle.getId()).findFirst();
         if (!foundVehicle.isEmpty()) {
             vehicleService.getAllVehicles().remove(foundVehicle.get());
+            return this.addVehicle(modVehicle);
         }
-        return this.addVehicle(newVehicle);
 
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @PutMapping("/{vehicleId}")
+    @PutMapping("/mod/fields/{vehicleId}")
     public ResponseEntity<String> modField(@PathVariable int vehicleId,
                                            @RequestParam(required = false) Integer id,
                                            @RequestParam(required = false) String mark,

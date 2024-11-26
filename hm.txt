@@ -15,3 +15,7 @@ Dla ambitnych:
     rozbuduj aplikacje o możliwość zwracania danych w postaci XML
     dodaj obsługę Swgger UI
     zaimplementuj HATEOAS
+
+TODO:
+mod vehice add id, validation for id, fix adding unnecesary
+refactor adding links
