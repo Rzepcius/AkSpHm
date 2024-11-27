@@ -27,9 +27,9 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 public class VehicleApi {
     public static final String VEHICLE_ID = "vehicleId";
     public static final String VEHICLE_COLOR = "vehicleColor";
+    public static final String ALL_VEHICLES = "allVehicles";
+    public static final String COLOR_URL = "color";
     private final VehicleService vehicleService;
-
-    private Link link;
 
     public VehicleApi(VehicleService vehicleService) {
         this.vehicleService = vehicleService;
@@ -41,13 +41,18 @@ public class VehicleApi {
         if (allVehicles == null || allVehicles.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        allVehicles.stream().filter(vehicle -> !vehicle.hasLinks()).
-                forEach(vehicle -> vehicle.
-                        add(linkTo(VehicleApi.class).slash(vehicle.getId()).withRel(VEHICLE_ID)).
-                        add(linkTo(VehicleApi.class).slash(vehicle.getColor()).withRel(VEHICLE_COLOR)));
+        linkCollection(allVehicles);
 
         CollectionModel<Vehicle> vehicleCollectionModel = CollectionModel.of(allVehicles, linkTo(VehicleApi.class).withSelfRel());
         return new ResponseEntity<>(vehicleCollectionModel, HttpStatus.OK);
+    }
+
+    private static void linkCollection(List<Vehicle> allVehicles) {
+        allVehicles.stream().filter(vehicle -> !vehicle.hasLinks()).
+                forEach(vehicle -> vehicle.
+                        add(linkTo(VehicleApi.class).slash(vehicle.getId()).withRel(VEHICLE_ID)).
+                        add(linkTo(VehicleApi.class).slash(vehicle.getColor()).withRel(VEHICLE_COLOR)).
+                        add(linkTo(VehicleApi.class).withRel(ALL_VEHICLES)));
     }
 
     @GetMapping("/{vehicleId}")
@@ -55,9 +60,8 @@ public class VehicleApi {
         Optional<Vehicle> vehicleById = vehicleService.getVehicleById(vehicleId);
         List<Link> links = new ArrayList<>();
         if (vehicleById.isPresent()) {
-            linkSingleEntry(vehicleById, links);
+            linkSingleEntry(vehicleById.get(), links);
         }
-        link = null;
         EntityModel<Vehicle> entityModel = EntityModel.of(vehicleById.get(), links);
         return new ResponseEntity<>(entityModel, HttpStatus.OK);
     }
@@ -65,14 +69,7 @@ public class VehicleApi {
     @GetMapping("/color/{color}")
     public ResponseEntity<CollectionModel<Vehicle>> getVehicleByColor(@PathVariable String color) {
         List<Vehicle> vehicleByColor = vehicleService.getVehicleByColor(color);
-        vehicleByColor.stream().
-                filter(vehicle -> !vehicle.hasLink(linkTo(VehicleApi.class).slash(vehicle.getId()).withRel(VEHICLE_ID).getRel())).
-                forEach(vehicle -> vehicle.
-                        add(linkTo(VehicleApi.class).slash(vehicle.getId()).withRel(VEHICLE_ID)));
-        vehicleByColor.stream().
-                filter(vehicle -> !vehicle.hasLink(linkTo(VehicleApi.class).slash("color").slash(vehicle.getColor()).withRel(VEHICLE_COLOR).getRel())).
-                forEach(vehicle -> vehicle.
-                        add(linkTo(VehicleApi.class).slash("color").slash(vehicle.getColor()).withRel(VEHICLE_COLOR)));
+        linkCollection(vehicleByColor);
         CollectionModel<Vehicle> vehicleCollectionModel = CollectionModel.
                 of(vehicleByColor, linkTo(VehicleApi.class).withSelfRel());
         if (vehicleByColor == null || vehicleByColor.isEmpty()) {
@@ -82,44 +79,50 @@ public class VehicleApi {
     }
 
     @PostMapping
-    public ResponseEntity<String> addVehicle(@RequestBody Vehicle newVehicle) {
+    public ResponseEntity<EntityModel<Vehicle>> addVehicle(@RequestBody Vehicle newVehicle) {
         Optional<Vehicle> foundVehicle = vehicleService.getAllVehicles().stream().
                 filter(vehicle -> vehicle.equals(newVehicle)).findFirst();
         if (vehicleService.getAllVehicles().stream().anyMatch(vehicle -> vehicle.getId() == newVehicle.getId())) {
-            return new ResponseEntity<>("Id already Used", HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         }
         if (foundVehicle.isEmpty()) {
+            List<Link> links = new ArrayList<>();
+            linkSingleEntry(newVehicle, links);
             vehicleService.getAllVehicles().add(newVehicle);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            EntityModel<Vehicle> entityModel = EntityModel.of(newVehicle, links);
+            return new ResponseEntity<>(entityModel, HttpStatus.CREATED);
         } else {
-            return new ResponseEntity<>("Duplicate Entry", HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         }
 
     }
 
     @PutMapping("/mod/{id}")
-    public ResponseEntity<String> modVehicle(@PathVariable int id,@RequestBody Vehicle modVehicle) {
+    public ResponseEntity<Vehicle> modVehicle(@PathVariable int id, @RequestBody Vehicle modVehicle) {
+        List<Link> links = new ArrayList<>();
         Optional<Vehicle> foundVehicle = vehicleService.getAllVehicles().stream().
                 filter(vehicle -> vehicle.getId() == modVehicle.getId()).findFirst();
-        if (!foundVehicle.isEmpty()) {
+        if (!foundVehicle.isPresent()) {
             vehicleService.getAllVehicles().remove(foundVehicle.get());
-            return this.addVehicle(modVehicle);
+            linkSingleEntry(modVehicle,links);
+            vehicleService.getAllVehicles().add(modVehicle);
+            return new ResponseEntity<>(modVehicle, HttpStatus.OK);
         }
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/mod/fields/{vehicleId}")
-    public ResponseEntity<String> modField(@PathVariable int vehicleId,
-                                           @RequestParam(required = false) Integer id,
-                                           @RequestParam(required = false) String mark,
-                                           @RequestParam(required = false) String model,
-                                           @RequestParam(required = false) String color) {
+    public ResponseEntity<Vehicle> modField(@PathVariable int vehicleId,
+                                            @RequestParam(required = false) Integer id,
+                                            @RequestParam(required = false) String mark,
+                                            @RequestParam(required = false) String model,
+                                            @RequestParam(required = false) String color) {
         Optional<Vehicle> vehicleById = vehicleService.getVehicleById(vehicleId);
         if (vehicleById.isPresent()) {
             if (id != null) {
                 if (vehicleService.getAllVehicles().stream().anyMatch(vehicle -> vehicle.getId() == id)) {
-                    return new ResponseEntity<>("Id already Used", HttpStatus.NOT_ACCEPTABLE);
+                    return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
                 } else {
                     vehicleById.get().setId(id);
                 }
@@ -133,20 +136,20 @@ public class VehicleApi {
             if (color != null && !color.isEmpty()) {
                 vehicleById.get().setColor(color);
             }
-            return new ResponseEntity<>(HttpStatus.ACCEPTED);
+            return new ResponseEntity<>(vehicleById.get(), HttpStatus.ACCEPTED);
         }
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @DeleteMapping("/{vehicleId}")
-    public ResponseEntity<String> modField(@PathVariable int vehicleId){
+    public ResponseEntity<HttpStatus> modField(@PathVariable int vehicleId) {
         Optional<Vehicle> vehicleById = vehicleService.getVehicleById(vehicleId);
-        if (vehicleById.isPresent()){
+        if (vehicleById.isPresent()) {
             if (vehicleService.getAllVehicles().remove(vehicleById.get())) {
                 return new ResponseEntity<>(HttpStatus.ACCEPTED);
             } else {
-                return new ResponseEntity<>("Vehicle not found", HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -154,14 +157,11 @@ public class VehicleApi {
     }
 
 
-    private void linkSingleEntry(Optional<Vehicle> vehicleById, List<Link> links) {
-        link = linkTo(VehicleApi.class).slash(vehicleById.get().getId()).withRel(VEHICLE_ID);
-        if (!vehicleById.get().hasLink(link.getRel())) {
-            links.add(link);
-        }
-        link = linkTo(VehicleApi.class).slash("color").slash(vehicleById.get().getColor()).withRel(VEHICLE_COLOR);
-        if (!vehicleById.get().hasLink(link.getRel())) {
-            links.add(link);
+    private void linkSingleEntry(Vehicle vehicleById, List<Link> links) {
+        if (!vehicleById.hasLinks()) {
+            links.add(linkTo(VehicleApi.class).slash(vehicleById.getId()).withRel(VEHICLE_ID));
+            links.add(linkTo(VehicleApi.class).slash(COLOR_URL).slash(vehicleById.getColor()).withRel(VEHICLE_COLOR));
+            links.add(linkTo(VehicleApi.class).withRel(ALL_VEHICLES));
         }
     }
 }
