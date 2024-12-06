@@ -61,9 +61,10 @@ public class VehicleApi {
         List<Link> links = new ArrayList<>();
         if (vehicleById.isPresent()) {
             linkSingleEntry(vehicleById.get(), links);
+            EntityModel<Vehicle> entityModel = EntityModel.of(vehicleById.get(), links);
+            return new ResponseEntity<>(entityModel, HttpStatus.OK);
         }
-        EntityModel<Vehicle> entityModel = EntityModel.of(vehicleById.get(), links);
-        return new ResponseEntity<>(entityModel, HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/color/{color}")
@@ -92,7 +93,7 @@ public class VehicleApi {
             EntityModel<Vehicle> entityModel = EntityModel.of(newVehicle, links);
             return new ResponseEntity<>(entityModel, HttpStatus.CREATED);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
     }
@@ -101,12 +102,15 @@ public class VehicleApi {
     public ResponseEntity<Vehicle> modVehicle(@PathVariable int id, @RequestBody Vehicle modVehicle) {
         List<Link> links = new ArrayList<>();
         Optional<Vehicle> foundVehicle = vehicleService.getAllVehicles().stream().
-                filter(vehicle -> vehicle.getId() == modVehicle.getId()).findFirst();
-        if (!foundVehicle.isPresent()) {
+                filter(vehicle -> vehicle.getId() == id).findFirst();
+        boolean usedId = vehicleService.getAllVehicles().stream().anyMatch(vehicle -> vehicle.getId() == modVehicle.getId());
+        if (foundVehicle.isPresent()&&!usedId) {
             vehicleService.getAllVehicles().remove(foundVehicle.get());
             linkSingleEntry(modVehicle,links);
             vehicleService.getAllVehicles().add(modVehicle);
             return new ResponseEntity<>(modVehicle, HttpStatus.OK);
+        } else if (usedId){
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         }
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
